@@ -2,12 +2,7 @@
 物体認識・把持を管理するマスター  
 Actionを通してobject_recognizerで物体認識、object_grasperで物体把持を行う  
 
----
-
-**ここにくっそわかりやすい(わかりやすいとは言っていない)物体把持に関するパッケージの関係図を貼ります。**  
-**楽しみに待っていて下さい。**  
-
----
+![物体認識・把持](https://user-images.githubusercontent.com/33217285/76415666-ee49f280-63dc-11ea-93c2-8c845aeedfe9.png)
 
 # Usage  
 物体把持に必要なノードを立ち上げます(RealSenseやdarknetについては省きます)  
