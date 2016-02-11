@@ -1,0 +1,6 @@
+<!-- -*- mode: XML -*- -->
+<launch>
+  <rosparam file="$(find manipulation)/config/object_dict.yaml" command="load" ns="object_dict"/> 
+  <node pkg="e_grasping_position_detector" name="grasping_position_detector" type="e_grasping_position_detector" />
+  <!-- <rosparam file="$(find manipulation)/config/location_list.yaml" command="load"/> -->
+</launch>
