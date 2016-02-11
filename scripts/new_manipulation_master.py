@@ -4,7 +4,7 @@
 import rospy
 import actionlib
 # ros msgs
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Twist
 # ros srvs
 from manipulation.srv import ManipulateSrv
@@ -12,6 +12,8 @@ from manipulation.srv import ManipulateSrv
 from manipulation.msg import *
 
 arm_change_pub = rospy.Publisher('/arm/changing_pose_req',String,queue_size=1)
+m6_pub = rospy.Publisher('m6_controller/command',Float64,queue_size=1)
+m4_pub = rospy.Publisher('m4_controller/command',Float64,queue_size=1)
 
 
 class ObjectRecognizer(object):
@@ -69,10 +71,12 @@ class ObjectGrasper(object):
 
 def main(req):
     rospy.sleep(1.0)
-    pose_req = String()
-    pose_req.data = 'carry'
+    global m6_pub
+    m6_pub.publish(0.0)
+    global m4_pub
+    m4_pub.publish(0.4)
     global arm_change_pub
-    arm_change_pub.publish(pose_req)
+    arm_change_pub.publish('carry')
     recognize_flg = True
     grasp_flg = False
     grasp_count = 0
