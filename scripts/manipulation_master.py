@@ -76,7 +76,7 @@ class ObjectGrasper(object):
 def main(req):
     head_pub = rospy.Publisher('/servo/head',Float64,queue_size=1)
     rospy.sleep(0.2)
-    head_pub.publish(-0.4)
+    head_pub.publish(-0.4363)
     recognize_flg = True
     grasp_flg = False
     grasp_count = 0
