@@ -63,7 +63,6 @@ class ManipulationMaster(object):
                 self.localize_req_pub.publish(req.data)
                 rospy.sleep(1.0)
                 while self.localize_result_flg == 'None' and not rospy.is_shutdown():
-                    print 'lo'
                     rate.sleep()
                 if self.localize_result_flg:
                     break
@@ -75,7 +74,6 @@ class ManipulationMaster(object):
                 break
             print 'Manipulate : ', loop_count
             while self.manipulate_result_flg == 'None' and not rospy.is_shutdown():
-                print 'ma'
                 rate.sleep()
             if self.manipulate_result_flg == 'Retry':
                 pass
