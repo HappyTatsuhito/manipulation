@@ -22,21 +22,22 @@ class ObjectRecognizer(object):
         rospy.loginfo('send goal')
         goal = ObjectRecognizerGoal()
         goal.recog_goal = target_name
-        ac.send_goal(goal, feedback_cb = recognizerFeedback)
-        roop_count = 0
+        ac.send_goal(goal, feedback_cb = self.recognizerFeedback)
+        loop_count = 0
         rate = rospy.Rate
         while not ac.wait_for_result() and not rospy.is_shutdown():
+            rospy.loginfo(loop_count)
             if self.feedback_flg:
-                roop_count = 0
+                loop_count = 0
                 self.feedback_flg = 'None'
             else:
-                roop_count += 1
+                loop_count += 1
                 self.feedback_flg = 'None'
-            if roop_count > 9:
+            if loop_count > 9:
                 ac.cancel_goal()
             rospy.Rate().sleep(3.0)
         result = ac.get_result()
-        recognize_flg = roop_count < 10
+        recognize_flg = loop_count < 10
 
         return recognize_flg, result.recog_result
 
@@ -54,20 +55,20 @@ class ObjectGrasper(object):
         rospy.loginfo('send goal')
         goal = ObjectGrasperGoal()
         goal.recog_goal = target_centroid
-        ac.send_goal(goal, feedback_cb = grasperFeedback)
+        ac.send_goal(goal, feedback_cb = self.grasperFeedback)
         ac.wait_for_result()
         result = ac.get_result()
 
         return result
 
-def main(self,req):
+def main(req):
     recognize_flg = False
     grasp_flg = False
     OR = ObjectRecognizer()
-    recognize_flg, object_centroid = OR.localizeObject(req.data)
+    recognize_flg, object_centroid = OR.recognizeObject('cup')
     if recognize_flg:
         OG = ObjectGrasper()
-        grasp_flg = OG.graspObject(object_centroid)
+        #grasp_flg = OG.graspObject(object_centroid)
     manipulation_flg = recognize_flg and grasp_flg
     finish_message = 'finish'
         

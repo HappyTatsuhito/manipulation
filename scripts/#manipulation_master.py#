@@ -57,8 +57,7 @@ class ManipulationMaster(object):
         cmd.linear.x = 0
         rate = rospy.Rate(5.0)
         loop_count = 0
-        #for m in range(3):
-        while loop_count < 99:
+        while loop_count < :
             self.manipulate_result_flg = 'None'
             for r in range(99):
                 print 'Localize : ', r
