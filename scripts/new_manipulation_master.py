@@ -64,18 +64,21 @@ class ObjectGrasper(object):
         return result
 
 def main(req):
-    recognize_flg = False
+    arm_change_pub = rospy.Publisher('/arm/changing_pose_req',String,queue_size=1)
+    arm_change_pub.publish('carry')
+    recognize_flg = True
     grasp_flg = False
-    print req.target
+    grasp_count = 0
     OR = ObjectRecognizer()
-    recognize_flg, object_centroid = OR.recognizeObject(req.target)
-    if recognize_flg:
-        OG = ObjectGrasper()
-        #grasp_flg = OG.graspObject(object_centroid)
+    OG = ObjectGrasper()
+    while recognize_flg and not grasp_flg and grasp_count < 6 and not rospy.is_shutdown():
+        recognize_flg, object_centroid = OR.recognizeObject(req.target)
+        if recognize_flg:
+            grasp_flg = OG.graspObject(object_centroid)
+            grasp_count += 1
     manipulation_flg = recognize_flg and grasp_flg
-    finish_message = 'finish'
         
-    return manipulation_flg, finish_message
+    return manipulation_flg
 
     
 if __name__ == '__main__':
