@@ -4,18 +4,22 @@
 import rospy
 import actionlib
 # ros msgs
+from std_msgs.msg import String
 from geometry_msgs.msg import Twist
 # ros srvs
 from manipulation.srv import ManipulateSrv
 # action msgs
 from manipulation.msg import *
 
+arm_change_pub = rospy.Publisher('/arm/changing_pose_req',String,queue_size=1)
+
+
 class ObjectRecognizer(object):
     def __init__(self):
         self.feedback_flg = None
 
     def recognizerFeedback(self,msg):
-        rospy.loginfo('feedback %s'%(msg))
+        rospy.loginfo('feedback : %s'%(msg))
         self.feedback_flg = msg.recog_feedback
         
     def recognizeObject(self,target_name):
@@ -32,7 +36,7 @@ class ObjectRecognizer(object):
             if self.feedback_flg:
                 loop_count = 0
                 self.feedback_flg = None
-            else:
+            elif self.feedback_flg == False:# Noneで入ってしまう(;_;)
                 loop_count += 1
                 self.feedback_flg = None
             if loop_count > 9:
@@ -56,24 +60,29 @@ class ObjectGrasper(object):
         act.wait_for_server(rospy.Duration(5))
         rospy.loginfo('send goal')
         goal = ObjectGrasperGoal()
-        goal.recog_goal = target_centroid
+        goal.grasp_goal = target_centroid
         act.send_goal(goal, feedback_cb = self.grasperFeedback)
         act.wait_for_result()
         result = act.get_result()
 
-        return result
+        return result.grasp_result
 
 def main(req):
-    arm_change_pub = rospy.Publisher('/arm/changing_pose_req',String,queue_size=1)
-    arm_change_pub.publish('carry')
+    rospy.sleep(1.0)
+    pose_req = String()
+    pose_req.data = 'carry'
+    global arm_change_pub
+    arm_change_pub.publish(pose_req)
     recognize_flg = True
     grasp_flg = False
     grasp_count = 0
     OR = ObjectRecognizer()
     OG = ObjectGrasper()
     while recognize_flg and not grasp_flg and grasp_count < 6 and not rospy.is_shutdown():
+        rospy.loginfo('----- Recognizer -----')
         recognize_flg, object_centroid = OR.recognizeObject(req.target)
         if recognize_flg:
+            rospy.loginfo('-----  Grasper   -----')
             grasp_flg = OG.graspObject(object_centroid)
             grasp_count += 1
     manipulation_flg = recognize_flg and grasp_flg
