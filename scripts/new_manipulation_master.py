@@ -3,18 +3,13 @@
 
 import rospy
 import actionlib
-# ros msgs
+# -- ros msgs --
 from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Twist
-# ros srvs
+# -- ros srvs --
 from manipulation.srv import ManipulateSrv
-# action msgs
+# -- action msgs --
 from manipulation.msg import *
-
-arm_change_pub = rospy.Publisher('/arm/changing_pose_req',String,queue_size=1)
-m6_pub = rospy.Publisher('m6_controller/command',Float64,queue_size=1)
-m4_pub = rospy.Publisher('m4_controller/command',Float64,queue_size=1)
-
 
 class ObjectRecognizer(object):
     def __init__(self):
@@ -70,23 +65,25 @@ class ObjectGrasper(object):
         return result.grasp_result
 
 def main(req):
-    rospy.sleep(1.0)
-    global m6_pub
+    # -- topic publisher --
+    m6_pub = rospy.Publisher('m6_controller/command',Float64,queue_size=1)
+    m4_pub = rospy.Publisher('m4_controller/command',Float64,queue_size=1)
+    # -- service client --
+    arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
+    rospy.sleep(0.2)
     m6_pub.publish(0.0)
-    global m4_pub
     m4_pub.publish(0.4)
-    global arm_change_pub
-    arm_change_pub.publish('carry')
+    arm_changer('carry')
     recognize_flg = True
     grasp_flg = False
     grasp_count = 0
     OR = ObjectRecognizer()
     OG = ObjectGrasper()
     while recognize_flg and not grasp_flg and grasp_count < 6 and not rospy.is_shutdown():
-        rospy.loginfo('----- Recognizer -----')
+        rospy.loginfo('\n----- Recognizer -----')
         recognize_flg, object_centroid = OR.recognizeObject(req.target)
         if recognize_flg:
-            rospy.loginfo('-----  Grasper   -----')
+            rospy.loginfo('\n-----  Grasper   -----')
             grasp_flg = OG.graspObject(object_centroid)
             grasp_count += 1
     manipulation_flg = recognize_flg and grasp_flg
@@ -96,6 +93,6 @@ def main(req):
     
 if __name__ == '__main__':
     rospy.init_node('manipulation_master')
-    #ros_service
+    # -- service server --
     manipulation = rospy.Service('/manipulation',ManipulateSrv, main)
     rospy.spin()
