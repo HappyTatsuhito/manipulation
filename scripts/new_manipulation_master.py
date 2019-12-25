@@ -36,7 +36,7 @@ class ObjectRecognizer(object):
             elif self.feedback_flg == False:# Noneで入ってしまう(;_;)
                 loop_count += 1
                 self.feedback_flg = None
-            if loop_count > 9:
+            if loop_count > 5:
                 act.cancel_goal()
             rospy.Rate(3.0).sleep()
         result = act.get_result()
