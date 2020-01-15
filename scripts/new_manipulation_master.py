@@ -37,6 +37,7 @@ class ObjectRecognizer(object):
                 loop_count += 1
                 self.feedback_flg = None
             if loop_count > 5:
+                act._set_simple_state(actionlib.SimpleGoalState.PENDING)
                 act.cancel_goal()
             rospy.Rate(3.0).sleep()
         result = act.get_result()
