@@ -2,99 +2,98 @@
 # -*- coding: utf-8 -*
 
 import rospy
-from std_msgs.msg import String,Bool,Float64
+import actionlib
+# -- ros msgs --
+from std_msgs.msg import String, Float64
 from geometry_msgs.msg import Twist
+# -- ros srvs --
+from manipulation.srv import ManipulateSrv
+# -- action msgs --
+from manipulation.msg import *
 
-class ManipulationMaster(object):
+class ObjectRecognizer(object):
     def __init__(self):
-        grasp_sub = rospy.Subscriber('/object/grasp_req',String,self.main)
-        localize_sub = rospy.Subscriber('/object/localize/res',Bool,self.localizeResultCB)
-        manipulate_sub = rospy.Subscriber('/object/manipulate/res',Bool,self.manipulateResultCB)
-        manipulate_retry_sub = rospy.Subscriber('/object/manipulate/retry',String,self.retryRequestCB)
-        self.localize_req_pub = rospy.Publisher('/object/localize/req',String,queue_size=1)
-        self.grasp_res_pub = rospy.Publisher('/object/grasp_res',Bool,queue_size=1)
-        self.cmd_vel_pub = rospy.Publisher('/cmd_vel_mux/input/teleop',Twist,queue_size=1)
-        self.m6_pub = rospy.Publisher('/m6_controller/command',Float64,queue_size=1)
+        self.feedback_flg = None
 
-        self.localize_result_flg = 'None'
-        self.manipulate_result_flg = 'None'
+    def recognizerFeedback(self,msg):
+        rospy.loginfo('feedback : %s'%(msg))
+        self.feedback_flg = msg.recog_feedback
         
-    def localizeResultCB(self,res):
-        self.localize_result_flg = res.data
-        return
-
-    def manipulateResultCB(self,res):
-        self.manipulate_result_flg = res.data
-        return
-
-    def retryRequestCB(self,res):
-        self.manipulate_result_flg = res.data
-        return
-
-    # object_grasperと一緒
-    # common_pkgに作ろう
-    def moveBase(self,rad_speed):
-        cmd = Twist()
-        for speed_i in range(10):
-            cmd.linear.x = rad_speed*0.05*speed_i
-            cmd.angular.z = 0
-            self.cmd_vel_pub.publish(cmd)
-            rospy.sleep(0.1)
-        for speed_i in range(10):
-            cmd.linear.x = rad_speed*0.05*(10-speed_i)
-            cmd.angular.z = 0
-            self.cmd_vel_pub.publish(cmd)
-            rospy.sleep(0.1)
-        cmd.linear.x = 0
-        cmd.angular.z = 0
-        self.cmd_vel_pub.publish(cmd)
-        return
-                
-    def main(self,req):
-        self.m6_pub.publish(-0.1)
-        rospy.sleep(4.0)
-        cmd = Twist()
-        cmd.linear.x = 0
-        rate = rospy.Rate(5.0)
+    def recognizeObject(self,target_name):
+        act = actionlib.SimpleActionClient('/object/localize', ObjectRecognizerAction)
+        rospy.loginfo('Start action with Recognizer')
+        act.wait_for_server(rospy.Duration(5))
+        goal = ObjectRecognizerGoal()
+        goal.recog_goal = target_name
+        act.send_goal(goal, feedback_cb = self.recognizerFeedback)
         loop_count = 0
-        #for m in range(3):
-        while loop_count < 99:
-            self.manipulate_result_flg = 'None'
-            for r in range(99):
-                print 'Localize : ', r
-                self.localize_result_flg = 'None'
-                self.localize_req_pub.publish(req.data)
-                rospy.sleep(1.0)
-                while self.localize_result_flg == 'None' and not rospy.is_shutdown():
-                    rate.sleep()
-                if self.localize_result_flg:
-                    break
-                else:
-                    cmd.angular.z = -2.4*(((r+1)%4)/2) + 1.2
-                    self.cmd_vel_pub.publish(cmd)
-                    rospy.sleep(2.0)
-            if not self.localize_result_flg:
-                self.manipulate_result_flg = False
-                break
-            print 'Manipulate : ', loop_count
-            while self.manipulate_result_flg == 'None' and not rospy.is_shutdown():
-                rate.sleep()
-            if self.manipulate_result_flg == 'Retry':
-                pass
-            elif self.manipulate_result_flg:# and type(self.manipulate_result_flg) == Bool():
-                print 'success'
-                break
-            else:
-                move_range = -1*(((loop_count+1)%4)/2)*1.2+0.6
-                self.moveBase(move_range)
+        result = None
+        while result == None and not rospy.is_shutdown():
+            result = act.get_result()
+            if self.feedback_flg:
+                loop_count = 0
+                self.feedback_flg = None
+            elif self.feedback_flg == False:# Noneで入ってしまう(;_;)
                 loop_count += 1
-        self.m6_pub.publish(0.3)
-        self.grasp_res_pub.publish(self.manipulate_result_flg)
-        self.localize_result_flg = 'None'
-        self.manipulate_result_flg = 'None'
-        return
+                self.feedback_flg = None
+            if loop_count > 5:
+                act._set_simple_state(actionlib.SimpleGoalState.PENDING)
+                act.cancel_goal()
+            rospy.Rate(3.0).sleep()
+        result = act.get_result()
+        recognize_flg = loop_count < 10
 
+        return recognize_flg, result.recog_result
+
+class ObjectGrasper(object):
+    def __init__(self):
+        pass
+
+    def grasperFeedback(self,msg):
+        rospy.loginfo('feedback %s'%(msg))
+
+    def graspObject(self, target_centroid):
+        act = actionlib.SimpleActionClient('/object/grasp', ObjectGrasperAction)
+        rospy.loginfo('waiting for grasper server')
+        act.wait_for_server(rospy.Duration(5))
+        rospy.loginfo('send goal')
+        goal = ObjectGrasperGoal()
+        goal.grasp_goal = target_centroid
+        act.send_goal(goal, feedback_cb = self.grasperFeedback)
+        act.wait_for_result()
+        result = act.get_result()
+
+        return result.grasp_result
+
+def main(req):
+    # -- topic publisher --
+    m6_pub = rospy.Publisher('m6_controller/command',Float64,queue_size=1)
+    m4_pub = rospy.Publisher('m4_controller/command',Float64,queue_size=1)
+    # -- service client --
+    arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
+    rospy.sleep(0.2)
+    m6_pub.publish(0.0)
+    m4_pub.publish(0.4)
+    arm_changer('carry')
+    recognize_flg = True
+    grasp_flg = False
+    grasp_count = 0
+    OR = ObjectRecognizer()
+    OG = ObjectGrasper()
+    while recognize_flg and not grasp_flg and grasp_count < 6 and not rospy.is_shutdown():
+        rospy.loginfo('\n----- Recognizer -----')
+        recognize_flg, object_centroid = OR.recognizeObject(req.target)
+        if recognize_flg:
+            rospy.loginfo('\n-----  Grasper   -----')
+            grasp_flg = OG.graspObject(object_centroid)
+            grasp_count += 1
+    manipulation_flg = recognize_flg and grasp_flg
+        
+    return manipulation_flg
+
+    
 if __name__ == '__main__':
     rospy.init_node('manipulation_master')
-    MM = ManipulationMaster()
+    # -- service server --
+    manipulation = rospy.Service('/manipulation',ManipulateSrv, main)
     rospy.spin()
