@@ -31,17 +31,19 @@ class ObjectRecognizer(object):
         while result == None and not rospy.is_shutdown():
             result = act.get_result()
             if self.feedback_flg:
-                loop_count = 0
+                loop_count -= 2
+                if loop_count < 0:
+                    loop_count = 0
                 self.feedback_flg = None
             elif self.feedback_flg == False:
                 loop_count += 1
                 self.feedback_flg = None
-            if loop_count > 5:
+            if loop_count > 4:
                 act._set_simple_state(actionlib.SimpleGoalState.PENDING)
                 act.cancel_goal()
             rospy.Rate(3.0).sleep()
         result = act.get_result()
-        recognize_flg = not(loop_count > 5)
+        recognize_flg = not(loop_count > 4)
 
         return recognize_flg, result.recog_result
 
