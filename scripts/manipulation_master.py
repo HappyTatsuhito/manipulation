@@ -33,7 +33,7 @@ class ObjectRecognizer(object):
             if self.feedback_flg:
                 loop_count = 0
                 self.feedback_flg = None
-            elif self.feedback_flg == False:# Noneで入ってしまう(;_;)
+            elif self.feedback_flg == False:
                 loop_count += 1
                 self.feedback_flg = None
             if loop_count > 5:
@@ -41,7 +41,7 @@ class ObjectRecognizer(object):
                 act.cancel_goal()
             rospy.Rate(3.0).sleep()
         result = act.get_result()
-        recognize_flg = loop_count < 10
+        recognize_flg = not(loop_count > 5)
 
         return recognize_flg, result.recog_result
 
@@ -67,13 +67,11 @@ class ObjectGrasper(object):
 
 def main(req):
     # -- topic publisher --
-    m6_pub = rospy.Publisher('m6_controller/command',Float64,queue_size=1)
-    m4_pub = rospy.Publisher('m4_controller/command',Float64,queue_size=1)
+    head_pub = rospy.Publisher('/head_req',Float64,queue_size=1)
     # -- service client --
     arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
     rospy.sleep(0.2)
-    m6_pub.publish(0.0)
-    m4_pub.publish(0.4)
+    head_pub.publish(0.0)
     arm_changer('carry')
     recognize_flg = True
     grasp_flg = False
