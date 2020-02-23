@@ -27,23 +27,29 @@ class ObjectRecognizer(object):
         goal.recog_goal = target_name
         act.send_goal(goal, feedback_cb = self.recognizerFeedback)
         loop_count = 0
+        limit_count = 4.0
         result = None
         while result == None and not rospy.is_shutdown():
             result = act.get_result()
             if self.feedback_flg:
-                loop_count -= 2
+                '''
+                loop_count -= 1
                 if loop_count < 0:
                     loop_count = 0
+                '''
+                loop_count = 0
+                limit_count -= 0.5
                 self.feedback_flg = None
             elif self.feedback_flg == False:
                 loop_count += 1
                 self.feedback_flg = None
-            if loop_count > 4:
+            #if loop_count > 4:
+            if loop_count > limit_count:
                 act._set_simple_state(actionlib.SimpleGoalState.PENDING)
                 act.cancel_goal()
             rospy.Rate(3.0).sleep()
         result = act.get_result()
-        recognize_flg = not(loop_count > 4)
+        recognize_flg = not(loop_count > limit_count)
 
         return recognize_flg, result.recog_result
 
