@@ -77,11 +77,13 @@ def main(req):
     # -- topic publisher --
     #head_pub = rospy.Publisher('/head_req',Float64,queue_size=1)
     head_pub = rospy.Publisher('/m6_controller/command',Float64,queue_size=1)
+    endeffector_pub = rospy.Publisher('/m4_controller/command',Float64,queue_size=1)
     # -- service client --
     arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
     rospy.sleep(0.4)
     #head_pub.publish(0.0)
     head_pub.publish(-0.07)
+    endeffector_pub.publish(0.5)
     arm_changer('carry')
     recognize_flg = True
     grasp_flg = False
