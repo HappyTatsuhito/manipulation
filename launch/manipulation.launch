@@ -1,6 +1,8 @@
+<!-- -*- mode: XML -*- -->
 <launch>
-	<node pkg="object_recognizer" name="object_recognizer" type="new_object_recognizer.py" />
 	<node pkg="manipulation" name="manipulation_master" type="manipulation_master.py" />
+	<node pkg="object_recognizer" name="object_recognizer" type="new_object_recognizer.py" />
 	<node pkg="e_grasping_position_detector" name="grasping_position_detector" type="e_grasping_position_detector" />
+	<!-- <rosparam file="$(find manipulation)/config/object_list.yaml" command="load"/> -->
 	<node pkg="object_grasper" name="object_grasper" type="new_object_grasper.py" />
 </launch>
