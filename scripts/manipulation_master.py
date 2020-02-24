@@ -106,4 +106,9 @@ if __name__ == '__main__':
     rospy.init_node('manipulation_master')
     # -- service server --
     manipulation = rospy.Service('/manipulation',ManipulateSrv, main)
+    endeffector_pub = rospy.Publisher('/m4_controller/command',Float64,queue_size=1)
+    arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
+    rospy.sleep(0.4)
+    endeffector_pub.publish(0.5)
+    arm_changer('carry')
     rospy.spin()

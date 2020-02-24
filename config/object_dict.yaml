@@ -1,6 +1,6 @@
 {'green stick':['cup'],
  'chip star':['cup'],
  'cup noodle':['cup'],
- 'yellow cup':['cup', 'donut', 'vase'],
- 'any':['cup', 'bottle', 'bowl', 'donut', 'teddy bear']
+ 'blue cup':['cup', 'donut', 'vase'],
+ 'any':['cup', 'bottle', 'bowl', 'donut', 'vase', 'teddy bear']
 }
