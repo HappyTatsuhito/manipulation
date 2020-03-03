@@ -15,12 +15,12 @@ Actionを通してobject_recognizerで物体認識、object_grasperで物体把�
 
 使用している型は独自srvなのでimportしてください  
 MiniPC(NUC):  
-    `from mimi_common_pkg.srv import ManipulateSrv`  
+    **`from mimi_common_pkg.srv import ManipulateSrv`**  
 Jetson:  
-    `from manipulation import ManipulateSrv`  
+    **`from manipulation import ManipulateSrv`**  
 
 例としてこんな感じ  
-    `rospy.ServiceProxy('/manipulation', ManipulateSrv)`  
+    **`rospy.ServiceProxy('/manipulation', ManipulateSrv)`**  
 
 # Input and Output  
 把持したい物体の名前(darknetに表示される名称)をString型で引数として呼び出して下さい  
