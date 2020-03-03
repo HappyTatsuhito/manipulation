@@ -8,7 +8,7 @@ Actionを通してobject_recognizerで物体認識、object_grasperで物体把�
     $ roslaunch manipulation manipulation.launch  
 
 マスターからはサービスで立ち上げます  
-    Name：/manipulation
+    Name：/manipulation  
     Type：manipulation/ManipulateSrv  
     Args：target(String)  
 
@@ -28,5 +28,5 @@ Jetson:
 把持に成功で`True`, 失敗で`False`を返します  
 
 # Other  
-[object_recognizerのリンクはこちら](https://github.com/HappyTatsuhito/object_recognizer)
-[object_grasperのリンクはこちら](https://github.com/HappyTatsuhito/object_grasper)
+object_recognizerのリンクは[こちら](https://github.com/HappyTatsuhito/object_recognizer)  
+object_grasperのリンクは[こちら](https://github.com/HappyTatsuhito/object_grasper)
