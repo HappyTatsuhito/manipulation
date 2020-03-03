@@ -20,7 +20,7 @@ class ObjectRecognizer(object):
         self.feedback_flg = msg.recog_feedback
         
     def recognizeObject(self,target_name):
-        act = actionlib.SimpleActionClient('/object/localize', ObjectRecognizerAction)
+        act = actionlib.SimpleActionClient('/manipulation/localize', ObjectRecognizerAction)
         rospy.loginfo('Start action with Recognizer')
         act.wait_for_server(rospy.Duration(5))
         goal = ObjectRecognizerGoal()
@@ -61,7 +61,7 @@ class ObjectGrasper(object):
         rospy.loginfo('feedback %s'%(msg))
 
     def graspObject(self, target_centroid):
-        act = actionlib.SimpleActionClient('/object/grasp', ObjectGrasperAction)
+        act = actionlib.SimpleActionClient('/manipulation/grasp', ObjectGrasperAction)
         rospy.loginfo('waiting for grasper server')
         act.wait_for_server(rospy.Duration(5))
         rospy.loginfo('send goal')
@@ -106,11 +106,4 @@ if __name__ == '__main__':
     rospy.init_node('manipulation_master')
     # -- service server --
     manipulation = rospy.Service('/manipulation',ManipulateSrv, main)
-    '''
-    endeffector_pub = rospy.Publisher('/m4_controller/command',Float64,queue_size=1)
-    arm_changer = rospy.ServiceProxy('/change_arm_pose',ManipulateSrv)
-    rospy.sleep(0.4)
-    endeffector_pub.publish(0.5)
-    arm_changer('carry')
-    '''
     rospy.spin()
